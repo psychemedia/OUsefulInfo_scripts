@@ -1,0 +1,74 @@
+<html><head>
+<title></title>
+
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.2.6/jquery.min.js">
+</script>
+
+<script type="text/javascript">
+//Routine to display programmes currently available on iPlayer given series ID
+// The output is attached to a uniquely identified HTML item
+
+var seriesID='b01dl8gl'
+// The BBC programmes series ID
+
+//The id of the HTML element you want to contain the displayed feed
+var containerID="test";
+
+//------------------------------------------------------
+
+function cross_domain_JSON_call(seriesID){
+ // BBC json does not support callbacks, so use YQL as JSON-P proxy
+ 
+ var url='http://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20json%20where%20url%3D%22http%3A%2F%2Fwww.bbc.co.uk%2Fprogrammes%2F'+seriesID+'%2Fepisodes%2Fplayer.json%22%20and%20itemPath%20%3D%20%22json.episodes%22&format=json&callback=?'
+ 
+ //fetch the feed from the address specified in 'url'
+// then call "myCallbackFunction" with the resulting feed items
+ $.getJSON(
+   url,
+   function(data) { myCallbackFunction(data.query.results); }
+ )
+}
+
+// A simple utility function to display the title of the feed items
+function displayOutput(txt){
+  $('#'+containerID).append('<div>'+txt+'</div>');
+}
+
+function myCallbackFunction(items){
+  console.log(items.episodes)
+  items=items.episodes
+  // Run through each item in the feed and print out its title
+  for (prog in items){
+    displayOutput('<img src="http://static.bbc.co.uk/programmeimages/272x153/episode/'+items[prog].programme.pid+'.jpg"/>'+items[prog].programme.programme.title+': <a href="http://www.bbc.co.uk/programmes/'+items[prog].programme.pid+'">'+items[prog].programme.title+'</a> ('+items[prog].programme.short_synopsis+', '+items[prog].programme.media.availability+')');
+  }
+}
+
+function parseSeriesFeed(items){
+  for (var i in items) {
+    seriesID=items[i].u.split('/')[4]
+    console.log(seriesID)
+    if (seriesID !='')
+      cross_domain_JSON_call(seriesID)
+  }
+}
+
+function getSeriesList(){
+  var seriesFeed='http://feeds.delicious.com/v2/json/psychemedia/oubbccopro?count=100&callback=?'
+  $.getJSON(
+   seriesFeed,
+   function(data) { parseSeriesFeed(data); }
+ )
+}
+
+// Tell JQuery to call the feed loader when the page is all loaded
+//$(document).ready(cross_domain_JSON_call(seriesID));
+$(document).ready(getSeriesList())
+</script>
+
+</head>
+
+<body>
+<div id="test"></div>
+</body>
+
+</html>
